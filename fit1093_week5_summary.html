@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIT1093 · Week 5 · Public Key Cryptography II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f4ee;
+    --ink:#16233a;          /* deep ink navy - body text */
+    --ink-soft:#42506a;
+    --line:#d8d2c4;
+    --public:#1f5fbf;       /* BLUE = public */
+    --public-bg:#e6effb;
+    --secret:#c0392f;       /* RED = private / secret */
+    --secret-bg:#fbe9e7;
+    --easy:#1f8a5b;         /* GREEN = easy / efficient */
+    --easy-bg:#e6f4ec;
+    --gold:#b8862b;         /* keys */
+    --card:#fffdf8;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:19px;              /* larger-than-normal base */
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:56px 28px 100px;}
+
+  /* ---- Hero ---- */
+  .hero{border-bottom:3px solid var(--ink);padding-bottom:26px;margin-bottom:14px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.72rem;letter-spacing:0.28em;text-transform:uppercase;
+    color:var(--secret);font-weight:700;
+  }
+  .hero h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;font-size:2.9rem;line-height:1.05;
+    margin:.35em 0 .15em;letter-spacing:-0.01em;
+  }
+  .hero .sub{font-size:1.1rem;color:var(--ink-soft);font-weight:500;}
+
+  /* ---- Colour key legend ---- */
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 8px;
+    font-size:0.92rem;
+  }
+  .legend .chip{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 14px;border-radius:999px;font-weight:600;
+    border:1px solid var(--line);background:var(--card);
+  }
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+  .pub{color:var(--public);} .pub .dot{background:var(--public);}
+  .sec{color:var(--secret);} .sec .dot{background:var(--secret);}
+  .esy{color:var(--easy);}   .esy .dot{background:var(--easy);}
+
+  /* ---- Sections ---- */
+  section{margin-top:52px;scroll-margin-top:20px;}
+  .snum{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--gold);font-weight:700;font-size:0.95rem;letter-spacing:.12em;
+  }
+  h2{
+    font-family:'Fraunces',serif;font-weight:600;
+    font-size:2rem;line-height:1.1;margin:.15em 0 .5em;
+    letter-spacing:-0.01em;
+  }
+  h3{
+    font-family:'Inter',sans-serif;font-weight:700;
+    font-size:1.18rem;margin:1.6em 0 .4em;color:var(--ink);
+  }
+  p{margin:.6em 0;}
+  strong{font-weight:700;}
+  .kpublic{color:var(--public);font-weight:700;}
+  .ksecret{color:var(--secret);font-weight:700;}
+  .keasy{color:var(--easy);font-weight:700;}
+  ul{margin:.5em 0 .8em;padding-left:1.3em;}
+  li{margin:.3em 0;}
+
+  /* ---- Callouts ---- */
+  .callout{
+    border-radius:12px;padding:18px 22px;margin:20px 0;
+    border:1px solid var(--line);position:relative;
+  }
+  .callout .tag{
+    font-family:'JetBrains Mono',monospace;font-size:0.68rem;
+    letter-spacing:0.2em;text-transform:uppercase;font-weight:700;
+    display:block;margin-bottom:6px;
+  }
+  .analogy{background:var(--card);border-left:5px solid var(--gold);}
+  .analogy .tag{color:var(--gold);}
+  .remember{background:var(--easy-bg);border-left:5px solid var(--easy);}
+  .remember .tag{color:var(--easy);}
+  .danger{background:var(--secret-bg);border-left:5px solid var(--secret);}
+  .danger .tag{color:var(--secret);}
+
+  /* ---- Math / worked example blocks ---- */
+  .math{
+    font-family:'JetBrains Mono',monospace;
+    background:#141d2e;color:#e8ecf4;
+    border-radius:12px;padding:20px 24px;margin:18px 0;
+    font-size:0.95rem;line-height:1.9;overflow-x:auto;
+  }
+  .math .c{color:#e9c46a;}      /* highlight */
+  .math .p{color:#6fb1f0;}      /* public/blue */
+  .math .s{color:#f08a7f;}      /* secret/red */
+  .math .cmt{color:#8b97ac;}    /* comment */
+  .inline{
+    font-family:'JetBrains Mono',monospace;
+    background:#eae6da;padding:2px 7px;border-radius:5px;font-size:0.92em;
+  }
+
+  /* ---- Tables ---- */
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:0.96rem;background:var(--card);border-radius:10px;overflow:hidden;}
+  th,td{border:1px solid var(--line);padding:11px 14px;text-align:left;vertical-align:top;}
+  thead th{background:var(--ink);color:#fff;font-weight:600;}
+  tbody th{background:#efeadf;font-weight:700;width:150px;}
+  .win{color:var(--easy);font-weight:700;}
+  .lose{color:var(--secret);font-weight:700;}
+
+  /* ---- Flow diagram (Alice/Bob) ---- */
+  .flow{
+    display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;
+    margin:18px 0;
+  }
+  .party{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;
+  }
+  .party h4{margin:0 0 8px;font-size:1rem;font-family:'Inter';font-weight:700;}
+  .party .line{font-family:'JetBrains Mono',monospace;font-size:0.85rem;margin:5px 0;line-height:1.5;}
+  .channel{
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    color:var(--ink-soft);font-family:'JetBrains Mono',monospace;font-size:0.8rem;
+    text-align:center;min-width:70px;
+  }
+  .arrow{font-size:1.4rem;line-height:1;color:var(--gold);}
+
+  /* ---- TOC ---- */
+  nav.toc{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 22px;margin:30px 0 10px;
+  }
+  nav.toc .tag{font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
+  nav.toc ol{margin:.5em 0 0;padding-left:1.4em;columns:2;column-gap:34px;}
+  nav.toc a{color:var(--ink);text-decoration:none;font-weight:500;}
+  nav.toc a:hover{color:var(--public);text-decoration:underline;}
+
+  hr.soft{border:none;border-top:1px dashed var(--line);margin:36px 0;}
+
+  @media(max-width:640px){
+    body{font-size:17px;}
+    .hero h1{font-size:2.1rem;}
+    h2{font-size:1.55rem;}
+    .flow{grid-template-columns:1fr;}
+    .channel{flex-direction:row;gap:10px;padding:6px 0;}
+    nav.toc ol{columns:1;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">FIT1093 · Cyber Security Tools &amp; Techniques · Week 5</span>
+    <h1>Public Key Cryptography II<br>Encryption Algorithms</h1>
+    <p class="sub">Diffie–Hellman · ElGamal · RSA · Hybrid Encryption</p>
+  </header>
+
+  <div class="legend">
+    <span class="chip pub"><span class="dot"></span>Blue = public</span>
+    <span class="chip sec"><span class="dot"></span>Red = secret / private</span>
+    <span class="chip esy"><span class="dot"></span>Green = easy / efficient</span>
+  </div>
+  <p style="font-size:.92rem;color:var(--ink-soft);margin-top:4px;">
+    Same colour code the lecturer uses across every slide — lean on it; it does the remembering for you.
+  </p>
+
+  <nav class="toc">
+    <span class="tag">On this sheet</span>
+    <ol>
+      <li><a href="#s0">The problem PKC solves</a></li>
+      <li><a href="#s1">Diffie–Hellman Key Exchange</a></li>
+      <li><a href="#s2">DH security &amp; MITM</a></li>
+      <li><a href="#s3">ElGamal PKE</a></li>
+      <li><a href="#s4">RSA PKE</a></li>
+      <li><a href="#s5">Why RSA decryption works</a></li>
+      <li><a href="#s6">Key lengths &amp; hard problems</a></li>
+      <li><a href="#s7">Key-directory integrity &amp; certificates</a></li>
+      <li><a href="#s8">PKE vs SKE + Hybrid Encryption</a></li>
+    </ol>
+  </nav>
+
+  <!-- ================= 0 ================= -->
+  <section id="s0">
+    <span class="snum">00 / THE SETUP</span>
+    <h2>The problem public-key crypto exists to solve</h2>
+    <p>
+      In <strong>Symmetric Key Encryption (SKE)</strong> both sides encrypt and decrypt with the
+      <em>same</em> <span class="ksecret">secret key K</span>. That's fast — but it raises one nasty
+      question: <strong>how do you get that shared secret to the other person in the first place</strong>,
+      when the only channel you have is a public one an attacker can read? This is the
+      <span class="ksecret">key distribution problem</span>.
+    </p>
+
+    <div class="callout analogy">
+      <span class="tag">Analogy · The locked-box paradox</span>
+      You want to post someone a locked box, but the only copy of the key… is <em>inside the box</em>.
+      SKE has this exact chicken-and-egg problem: to send data securely you already need a shared secret,
+      but sharing that secret securely is the whole problem. Public-key crypto is the way out.
+    </div>
+
+    <p>
+      <strong>Diffie–Hellman (1976)</strong> was the first idea suggesting Public-Key Cryptography (PKC):
+      jointly compute a shared secret out of <span class="kpublic">public values only</span>, so
+      <strong>no secret ever travels down the channel</strong>.
+    </p>
+    <p style="font-size:.92rem;color:var(--ink-soft);">
+      Historical footnote for exam trivia: DH was <em>secretly</em> discovered by Malcolm Williamson
+      (UK GCHQ) in 1974, two years before the public version.
+    </p>
+  </section>
+
+  <!-- ================= 1 ================= -->
+  <section id="s1">
+    <span class="snum">01 / KEY EXCHANGE</span>
+    <h2>Diffie–Hellman Key Exchange</h2>
+    <p>
+      DH lets Alice and Bob agree on a shared secret over a public channel. It's everywhere:
+      <strong>TLS/HTTPS, IPsec, Bluetooth, 5G, IoT</strong>.
+    </p>
+
+    <h3>The moving parts</h3>
+    <ul>
+      <li><span class="kpublic">p</span> and <span class="kpublic">g</span> — public parameters, <span class="kpublic">p</span> is a large prime.</li>
+      <li><span class="ksecret">a</span> = Alice's private key &nbsp;·&nbsp; <span class="ksecret">b</span> = Bob's private key.</li>
+      <li><span class="kpublic">A</span> = Alice's public key = <span class="kpublic">g<sup>a</sup> mod p</span> &nbsp;·&nbsp; <span class="kpublic">B</span> = <span class="kpublic">g<sup>b</sup> mod p</span>.</li>
+      <li>Shared secret <span class="ksecret">K</span> — computed independently by both, never sent.</li>
+    </ul>
+
+    <div class="flow">
+      <div class="party">
+        <h4>Alice</h4>
+        <div class="line">private <span style="color:var(--secret)">a</span></div>
+        <div class="line"><span style="color:var(--public)">A</span> = g<sup>a</sup> mod p</div>
+        <div class="line" style="margin-top:10px"><span style="color:var(--secret)">K</span> = <span style="color:var(--public)">B</span><sup>a</sup> mod p</div>
+      </div>
+      <div class="channel">
+        <div class="arrow">→</div><div>send A</div>
+        <div class="arrow">←</div><div>send B</div>
+      </div>
+      <div class="party">
+        <h4>Bob</h4>
+        <div class="line">private <span style="color:var(--secret)">b</span></div>
+        <div class="line"><span style="color:var(--public)">B</span> = g<sup>b</sup> mod p</div>
+        <div class="line" style="margin-top:10px"><span style="color:var(--secret)">K</span> = <span style="color:var(--public)">A</span><sup>b</sup> mod p</div>
+      </div>
+    </div>
+
+    <h3>Why they land on the same K</h3>
+    <div class="math">
+Alice: <span class="s">K</span> = <span class="p">B</span><sup>a</sup> = (g<sup>b</sup>)<sup>a</sup> = g<sup><span class="c">ba</span></sup> mod p
+Bob:   <span class="s">K</span> = <span class="p">A</span><sup>b</sup> = (g<sup>a</sup>)<sup>b</sup> = g<sup><span class="c">ab</span></sup> mod p
+<span class="cmt">// ba = ab, so both get the SAME secret via different routes</span>
+    </div>
+
+    <div class="callout analogy">
+      <span class="tag">Analogy · Mixing paint</span>
+      Start with a public base colour everyone can see (<span class="kpublic">g, p</span>). Each person
+      stirs in their own <span class="ksecret">secret colour</span> and posts the <em>mixture</em>
+      (<span class="kpublic">A, B</span>) publicly. Each then stirs their own secret colour into the
+      mixture they received. Both bowls end up the identical shade (<span class="ksecret">K</span>). An
+      eavesdropper sees the public mixtures but <strong>separating a mixed paint back into its
+      ingredients is practically impossible</strong> — that's the one-way trick doing the work.
+    </div>
+
+    <div class="callout remember">
+      <span class="tag">Memory aid</span>
+      <strong>“Same secret, opposite order.”</strong> Alice does g<sup>b</sup> then raises to
+      <span class="ksecret">a</span>; Bob does g<sup>a</sup> then raises to <span class="ksecret">b</span>.
+      Exponents commute → same K. The only thing that must stay private is your own exponent
+      (<span class="ksecret">a</span> or <span class="ksecret">b</span>).
+    </div>
+
+    <h3>Worked example (from the slides)</h3>
+    <div class="math">
+<span class="cmt">g public, p = 23,  a = 6 (Alice),  b = 15 (Bob)</span>
+A = 8   B = 19   <span class="cmt">(the public keys exchanged)</span>
+
+Alice: <span class="s">K</span> = 19<sup>6</sup> mod 23 = (361)<sup>3</sup> = 16<sup>3</sup> = <span class="c">2</span> (mod 23)
+Bob:   <span class="s">K</span> = 8<sup>15</sup> mod 23              = <span class="c">2</span> (mod 23)   ✓ match
+    </div>
+    <p style="font-size:.92rem;color:var(--ink-soft);">
+      Exam tip: reduce <em>after each multiplication</em> (e.g. 19² = 361 → 16 mod 23) so the numbers
+      never blow up. That's exactly what "efficiently computable" means in practice.
+    </p>
+  </section>
+
+  <!-- ================= 2 ================= -->
+  <section id="s2">
+    <span class="snum">02 / DH SECURITY</span>
+    <h2>What keeps Diffie–Hellman safe (and what breaks it)</h2>
+
+    <p>To recover K, an attacker needs <span class="ksecret">a</span> or <span class="ksecret">b</span>. Two hard problems stand in the way:</p>
+
+    <table>
+      <thead><tr><th>Problem</th><th>Attacker knows</th><th>Wants</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <th>Discrete Log Problem (DLP)</th>
+          <td><span class="kpublic">p, g, A</span> where A = g<sup>a</sup></td>
+          <td>the exponent <span class="ksecret">a</span></td>
+          <td class="lose">Infeasible (large p)</td>
+        </tr>
+        <tr>
+          <th>Diffie–Hellman Problem (DHP)</th>
+          <td><span class="kpublic">p, g, A, B</span></td>
+          <td><span class="ksecret">K</span> = g<sup>ab</sup> directly</td>
+          <td class="lose">Infeasible (large p)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout remember">
+      <span class="tag">Memory aid</span>
+      <strong>Easy one way, hard the other.</strong> Computing <span class="kpublic">A = g<sup>a</sup> mod p</span>
+      is fast (repeated squaring). Going backwards — finding <span class="ksecret">a</span> from
+      <span class="kpublic">A</span> — is the discrete log, and it's the wall attackers hit.
+    </div>
+
+    <h3>The catch: Man-in-the-Middle (MITM)</h3>
+    <p>
+      DH proves nobody can <em>compute</em> the secret from the public values — but it says nothing about
+      <strong>whose</strong> public key you actually received. If an attacker swaps
+      <span class="kpublic">B</span> for their own <span class="ksecret">M = g<sup>m</sup></span>,
+      the whole thing collapses.
+    </p>
+    <div class="math">
+Alice ──A──► <span class="s">Attacker</span> ──M──► Bob
+Alice ◄──M── <span class="s">Attacker</span> ◄──B── Bob
+
+Attacker sets up TWO shared keys:
+   <span class="s">K1</span> = A<sup>m</sup>  (shared with Alice)
+   <span class="s">K2</span> = B<sup>m</sup>  (shared with Bob)
+
+Then relays: E(m,<span class="s">K1</span>) → Decrypt(<span class="s">K1</span>) → re-encrypt E(m,<span class="s">K2</span>) → Bob
+<span class="cmt">// Attacker reads/edits everything; both sides think they're secure</span>
+    </div>
+    <div class="callout danger">
+      <span class="tag">Attack · Integrity failure</span>
+      MITM is an <strong>integrity attack on the public-key value</strong>. DH gives you confidentiality of
+      the maths but <em>no authentication</em> of who's on the other end. The fix comes later in the unit:
+      <strong>authenticated certificates / digital signatures</strong>.
+    </div>
+    <div class="callout analogy">
+      <span class="tag">Analogy · The dishonest courier</span>
+      Picture the paint mixtures being hand-delivered by a courier who quietly swaps in his own tins going
+      each way. Alice and Bob each mix a "shared" colour — but with the <em>courier</em>, not each other.
+      He sits in the middle repainting every message.
+    </div>
+  </section>
+
+  <!-- ================= 3 ================= -->
+  <section id="s3">
+    <span class="snum">03 / ELGAMAL</span>
+    <h2>ElGamal PKE — turning DH into encryption</h2>
+    <p>
+      DH is a <em>key exchange</em> (both sides must be online, both publish keys). ElGamal (1985) converts
+      it into <strong>public-key encryption</strong>: only the receiver Bob publishes a long-term key, and
+      Alice can encrypt to him whenever she likes.
+    </p>
+    <p>
+      <strong>The trick:</strong> Alice generates a fresh <em>ephemeral</em> (one-time) DH keypair
+      <span class="ksecret">a</span>/<span class="kpublic">A</span> per message, derives the DH shared key
+      with Bob, encrypts the message with it, and <strong>ships <span class="kpublic">A</span> alongside the
+      ciphertext</strong> so Bob can reconstruct the same key.
+    </p>
+
+    <div class="flow">
+      <div class="party">
+        <h4>Alice (sender)</h4>
+        <div class="line">look up Bob's <span style="color:var(--public)">B</span></div>
+        <div class="line">pick ephemeral <span style="color:var(--secret)">a</span></div>
+        <div class="line"><span style="color:var(--public)">A</span> = g<sup>a</sup> mod p</div>
+        <div class="line"><span style="color:var(--secret)">K</span> = <span style="color:var(--public)">B</span><sup>a</sup> = g<sup>ab</sup> mod p</div>
+        <div class="line">C = Enc(<span style="color:var(--secret)">K</span>, P)</div>
+      </div>
+      <div class="channel">
+        <div class="arrow">→</div>
+        <div>send<br><span style="color:var(--public)">A</span>, C</div>
+      </div>
+      <div class="party">
+        <h4>Bob (receiver)</h4>
+        <div class="line">private <span style="color:var(--secret)">b</span>, public <span style="color:var(--public)">B</span></div>
+        <div class="line" style="margin-top:10px"><span style="color:var(--secret)">K</span> = <span style="color:var(--public)">A</span><sup>b</sup> = g<sup>ab</sup> mod p</div>
+        <div class="line">P = Dec(<span style="color:var(--secret)">K</span>, C)</div>
+      </div>
+    </div>
+
+    <div class="callout remember">
+      <span class="tag">Memory aid</span>
+      <strong>ElGamal = DH + a note attached.</strong> "<span class="kpublic">A</span>, C" — the ephemeral
+      public key rides <em>with</em> the ciphertext. Ephemeral = new random <span class="ksecret">a</span>
+      every message, which is why the same plaintext encrypts differently each time.
+    </div>
+    <p style="font-size:.92rem;color:var(--ink-soft);">
+      Note "Enc" here is a <em>symmetric</em> cipher keyed by the DH-derived K — so ElGamal is already
+      quietly doing the hybrid trick you'll meet at the end.
+    </p>
+  </section>
+
+  <!-- ================= 4 ================= -->
+  <section id="s4">
+    <span class="snum">04 / RSA</span>
+    <h2>RSA PKE — the first public-key cipher (1977)</h2>
+    <p>
+      <strong>R</strong>ivest, <strong>S</strong>hamir, <strong>A</strong>dleman. (Secretly found earlier by
+      Clifford Cocks, GCHQ, 1973.) Unlike DH/ElGamal, RSA's security rests on
+      <strong>factoring</strong>, not discrete logs.
+    </p>
+
+    <h3>KeyGen</h3>
+    <div class="math">
+1. pick two distinct large primes  <span class="s">p</span>, <span class="s">q</span>
+2. modulus       <span class="p">n</span> = p × q
+3. Euler totient <span class="s">φ(n)</span> = (p−1)(q−1)
+4. pick <span class="p">e</span> coprime to φ(n)      →  public key = (<span class="p">e</span>, <span class="p">n</span>)
+5. <span class="s">d</span> = <span class="p">e</span><sup>−1</sup> mod φ(n)             →  private key = <span class="s">d</span>
+   <span class="cmt">// so that  e × d ≡ 1 (mod φ(n))   — d "undoes" e</span>
+    </div>
+
+    <h3>Encrypt / Decrypt (both just modular exponentiation)</h3>
+    <div class="math">
+Encrypt:  C = m<sup><span class="p">e</span></sup> mod <span class="p">n</span>      <span class="cmt">// with the PUBLIC key</span>
+Decrypt:  m = C<sup><span class="s">d</span></sup> mod <span class="p">n</span>      <span class="cmt">// with the PRIVATE key</span>
+    </div>
+
+    <div class="callout analogy">
+      <span class="tag">Analogy · A box of open padlocks</span>
+      Bob mass-produces open padlocks and hands them out freely — that's his
+      <span class="kpublic">public key (e, n)</span>. Anyone can snap a message shut inside a box. But only
+      Bob holds the <span class="ksecret">key (d)</span> that opens them. Distributing the padlock reveals
+      nothing about the key.
+    </div>
+
+    <h3>Worked example (p = 5, q = 11)</h3>
+    <div class="math">
+<span class="cmt">KeyGen</span>
+n = 5 × 11 = 55 ;  φ(n) = 4 × 10 = 40
+pick e = 3, then d = 27   since (3 × 27) mod 40 = 81 mod 40 = 1 ✓
+public (<span class="p">3</span>, <span class="p">55</span>)   private (<span class="s">27</span>, <span class="p">55</span>)
+
+<span class="cmt">Encrypt  m = 13</span>
+C = 13<sup>3</sup> mod 55 = (169 mod 55) × 13 mod 55 = 4 × 13 = <span class="c">52</span>
+
+<span class="cmt">Decrypt  C = 52</span>
+m = 52<sup>27</sup> mod 55 = … = <span class="c">13</span> ✓
+    </div>
+
+    <div class="callout remember">
+      <span class="tag">Memory aid · don't mix up the keys</span>
+      Public = <strong>(e, n)</strong> · <strong>e</strong> for <em>e</em>ncrypt/<em>e</em>veryone.
+      Private = <strong>d</strong> · <strong>d</strong> for <em>d</em>ecrypt. And
+      <span class="inline">e × d ≡ 1 (mod φ(n))</span> is the linchpin — d is just e's inverse mod φ(n).
+    </div>
+  </section>
+
+  <!-- ================= 5 ================= -->
+  <section id="s5">
+    <span class="snum">05 / RSA PROOF</span>
+    <h2>Why RSA decryption always recovers m</h2>
+    <p>It comes straight out of number theory — one theorem does all the work:</p>
+    <div class="callout analogy" style="border-left-color:var(--public);background:var(--public-bg);">
+      <span class="tag" style="color:var(--public);">Euler's Theorem</span>
+      If <span class="kpublic">n = p×q</span> and <span class="inline">e × d ≡ 1 (mod φ(n))</span>,
+      then for any M: &nbsp; <strong>M<sup>e×d</sup> mod n = M.</strong>
+    </div>
+    <div class="math">
+Decrypt(C) = C<sup><span class="s">d</span></sup> mod n
+           = (m<sup><span class="p">e</span></sup>)<sup><span class="s">d</span></sup> mod n
+           = m<sup><span class="c">e×d</span></sup> mod n
+           = m            <span class="cmt">// by Euler's Theorem, since e×d ≡ 1 mod φ(n)</span>
+    </div>
+    <div class="callout remember">
+      <span class="tag">One-line intuition</span>
+      Encrypting raises m to <span class="kpublic">e</span>; decrypting raises to <span class="ksecret">d</span>.
+      Because <span class="kpublic">e</span> and <span class="ksecret">d</span> are inverses mod φ(n), the two
+      exponentiations <strong>cancel out</strong> and you're back to m.
+    </div>
+
+    <h3>RSA security — what the attacker faces</h3>
+    <p>The secrets are <span class="ksecret">d, φ(n), p, q</span>. To decrypt without permission, an attacker would:</p>
+    <ul>
+      <li>Brute-force all n possible messages — hopeless for large n; or</li>
+      <li>Compute <span class="ksecret">d = e<sup>−1</sup> mod φ(n)</span> — but that needs
+          <span class="ksecret">φ(n) = (p−1)(q−1)</span>, which needs <span class="ksecret">p</span> and
+          <span class="ksecret">q</span>…</li>
+      <li>…i.e. <strong>factor <span class="kpublic">n</span></strong> — the
+          <span class="ksecret">Integer Factorisation Problem</span>, infeasible for large n.</li>
+    </ul>
+    <p>
+      Legitimate users only ever do <em>exponentiation</em> (easy); the attacker is forced into
+      <em>factoring</em> (hard). That asymmetry is the whole security argument.
+    </p>
+  </section>
+
+  <!-- ================= 6 ================= -->
+  <section id="s6">
+    <span class="snum">06 / STRENGTH</span>
+    <h2>Key lengths &amp; the two hard problems</h2>
+
+    <h3>RSA vs ElGamal — one line to remember</h3>
+    <table>
+      <thead><tr><th>Scheme</th><th>Attacker's hard problem</th></tr></thead>
+      <tbody>
+        <tr><th>RSA</th><td>Integer Factorisation Problem (factor n)</td></tr>
+        <tr><th>ElGamal / DH</th><td>Discrete Logarithm Problem (find the exponent)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout remember">
+      <span class="tag">Mnemonic</span>
+      <strong>RSA → Rip apart a product (factoring).</strong> &nbsp;
+      <strong>ElGamal &amp; DH → find the Log (discrete log).</strong>
+    </div>
+
+    <h3>Equivalent strengths (keylength.com, 128-bit row is today's baseline)</h3>
+    <table>
+      <thead>
+        <tr><th>Symmetric strength</th><th>Symmetric algo</th><th>RSA / factoring modulus</th><th>Discrete log key</th><th>Elliptic Curve</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>80 (legacy)</td><td>2TDEA</td><td>1024</td><td>160</td><td>160</td></tr>
+        <tr><td>112</td><td>3TDEA</td><td>2048</td><td>224</td><td>224</td></tr>
+        <tr style="background:var(--easy-bg);"><td class="win">128 ✱ baseline</td><td>AES-128</td><td>3072</td><td>256</td><td>256</td></tr>
+        <tr><td>192</td><td>AES-192</td><td>7680</td><td>384</td><td>384</td></tr>
+        <tr><td>256</td><td>AES-256</td><td>15360</td><td>512</td><td>512</td></tr>
+      </tbody>
+    </table>
+    <div class="callout remember">
+      <span class="tag">Takeaway</span>
+      To match just <strong>128 bits</strong> of symmetric strength, RSA needs a
+      <strong>3072-bit</strong> modulus but ECC needs only <strong>256 bits</strong>. Public-key sizes grow
+      much faster than symmetric ones — and ECC is dramatically more compact than RSA for the same security.
+      That size/speed gap is a big reason hybrid encryption exists.
+    </div>
+  </section>
+
+  <!-- ================= 7 ================= -->
+  <section id="s7">
+    <span class="snum">07 / INTEGRITY</span>
+    <h2>Integrity of the key directory → certificates</h2>
+    <p>
+      PKE removes the <em>distribution</em> problem, but a new one appears: <strong>are you sure the public
+      key you looked up really belongs to Bob?</strong> If an attacker replaces Bob's
+      <span class="kpublic">pk<sub>R</sub></span> with their own <span class="ksecret">pk<sub>A</sub></span>
+      in the directory, Alice encrypts <em>to the attacker</em> while believing it's Bob. This is the same
+      devastating <strong>integrity attack</strong> as DH's MITM.
+    </p>
+    <div class="callout analogy" style="border-left-color:var(--public);background:var(--public-bg);">
+      <span class="tag" style="color:var(--public);">Solution · Digital certificates</span>
+      A trusted <strong>Certification Authority (CA)</strong> vouches for the binding "this public key belongs
+      to Bob" by <strong>signing</strong> it. Anyone can verify the certificate with the CA's public key to
+      confirm the pk is authentic — like a tamper-proof government seal on an ID. This blocks MITM/integrity
+      attacks. (Full detail returns in the Security-protocols week, after digital signatures.)
+    </div>
+  </section>
+
+  <!-- ================= 8 ================= -->
+  <section id="s8">
+    <span class="snum">08 / PUTTING IT TOGETHER</span>
+    <h2>PKE vs SKE, and why we use both (Hybrid Encryption)</h2>
+
+    <table>
+      <thead><tr><th></th><th>PKE (public-key)</th><th>SKE (symmetric)</th></tr></thead>
+      <tbody>
+        <tr><th>Keys</th>
+          <td>Each user has <span class="kpublic">pk</span> &amp; <span class="ksecret">sk</span>, mathematically related</td>
+          <td>Two users share one secret key <span class="ksecret">k</span></td></tr>
+        <tr><th>Do / undo</th>
+          <td>Do with <span class="kpublic">pk</span>, undo with <span class="ksecret">sk</span></td>
+          <td>Do &amp; undo with the same <span class="ksecret">k</span></td></tr>
+        <tr><th>Distribution</th>
+          <td class="win">No key-distribution problem</td>
+          <td class="lose">Has key-distribution problem</td></tr>
+        <tr><th>Speed</th>
+          <td class="lose">Slower</td>
+          <td class="win">Faster</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      Neither wins outright — so <strong>combine their best features</strong>. That's
+      <strong>Hybrid Encryption</strong> (a.k.a. the <em>Digital Envelope</em>):
+    </p>
+    <ul>
+      <li>Use <span class="kpublic">PKE</span> to transport a small, random <span class="ksecret">symmetric key</span>
+        → solves key distribution; slowness doesn't matter because the key is tiny.</li>
+      <li>Use <span class="keasy">SKE</span> under that key to encrypt the actual (possibly huge) message
+        → fast bulk encryption.</li>
+    </ul>
+
+    <div class="math">
+<span class="cmt">Sender builds the "envelope"</span>
+1. generate random symmetric key <span class="s">k</span>
+2. encrypted message      = Enc_SKE(<span class="s">k</span>, message)      <span class="cmt">// fast</span>
+3. encrypted key          = Enc_PKE(<span class="p">receiver_pk</span>, <span class="s">k</span>)   <span class="cmt">// small</span>
+   digital envelope        = { encrypted message  +  encrypted key }
+
+<span class="cmt">Receiver opens it</span>
+4. <span class="s">k</span>       = Dec_PKE(<span class="s">receiver_sk</span>, encrypted key)
+5. message = Dec_SKE(<span class="s">k</span>, encrypted message)
+    </div>
+
+    <div class="callout analogy">
+      <span class="tag">Analogy · Armoured truck for the key only</span>
+      Sending a whole warehouse of goods by slow armoured truck (PKE) would take forever. Instead you use the
+      truck to deliver just <strong>one small house key</strong>, then move all the goods quickly through the
+      normal door that key opens (SKE). PKE secures the key; SKE moves the data.
+    </div>
+    <div class="callout remember">
+      <span class="tag">This is how the real world works</span>
+      TLS, PGP/encrypted email, Signal, etc. are all hybrid: public-key crypto to establish/transport a
+      session key, symmetric crypto for the traffic.
+    </div>
+  </section>
+
+  <hr class="soft">
+  <p style="font-size:.9rem;color:var(--ink-soft);">
+    <strong>Reference:</strong> Stallings &amp; Brown, <em>Computer Security: Principles and Practice</em>
+    (Ch. 21.4–21.5). Deeper: Katz &amp; Lindell, <em>Introduction to Modern Cryptography</em> Ch. 10.
+  </p>
+
+</div>
+</body>
+</html>
