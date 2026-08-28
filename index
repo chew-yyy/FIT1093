@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIT1093 · Cyber Security · Study Sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f4ee;--ink:#16233a;--ink-soft:#42506a;--line:#d8d2c4;
+    --public:#1f5fbf;--secret:#c0392f;--easy:#1f8a5b;--gold:#b8862b;--card:#fffdf8;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:19px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:960px;margin:0 auto;padding:64px 28px 100px;}
+
+  /* Hero */
+  .hero{margin-bottom:40px;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:0.74rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--secret);font-weight:700;}
+  .hero h1{font-family:'Fraunces',serif;font-weight:900;font-size:4rem;line-height:0.98;margin:.28em 0 .2em;letter-spacing:-0.02em;}
+  .hero h1 .accent{color:var(--public);}
+  .hero .sub{font-size:1.22rem;color:var(--ink-soft);max-width:640px;}
+  .rule{height:4px;background:var(--ink);border:none;margin:34px 0 0;}
+
+  /* legend + how to */
+  .meta{display:flex;flex-wrap:wrap;gap:30px;margin:30px 0 4px;align-items:flex-start;}
+  .legendbox{flex:1 1 260px;}
+  .howto{flex:1 1 300px;}
+  .mtag{font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;display:block;margin-bottom:10px;}
+  .legend{display:flex;flex-direction:column;gap:8px;font-size:0.95rem;}
+  .legend span{display:inline-flex;align-items:center;gap:10px;font-weight:600;}
+  .dot{width:13px;height:13px;border-radius:50%;display:inline-block;}
+  .pub{color:var(--public);} .pub .dot{background:var(--public);}
+  .sec{color:var(--secret);} .sec .dot{background:var(--secret);}
+  .esy{color:var(--easy);}   .esy .dot{background:var(--easy);}
+  .howto p{margin:.2em 0;font-size:0.95rem;color:var(--ink-soft);}
+
+  /* Cards */
+  .cards{margin-top:46px;display:grid;gap:20px;}
+  a.card{
+    display:grid;grid-template-columns:88px 1fr;gap:24px;align-items:start;
+    text-decoration:none;color:inherit;background:var(--card);
+    border:1px solid var(--line);border-radius:16px;padding:26px 28px;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  a.card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -14px rgba(22,35,58,.35);border-color:var(--public);}
+  .wknum{
+    font-family:'Fraunces',serif;font-weight:900;font-size:3.2rem;line-height:1;
+    color:var(--gold);border-right:2px solid var(--line);padding-right:8px;
+  }
+  .wklabel{font-family:'JetBrains Mono',monospace;font-size:0.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:2px;}
+  .card h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.55rem;line-height:1.12;margin:.1em 0 .35em;letter-spacing:-0.01em;}
+  .card p{margin:0 0 .8em;color:var(--ink-soft);font-size:0.98rem;}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;}
+  .tags b{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:0.72rem;background:#efeadf;color:var(--ink);padding:4px 10px;border-radius:999px;}
+  .go{font-family:'JetBrains Mono',monospace;font-size:0.78rem;font-weight:700;color:var(--public);margin-top:12px;display:inline-block;}
+
+  footer{margin-top:56px;border-top:1px dashed var(--line);padding-top:20px;font-size:0.88rem;color:var(--ink-soft);}
+  footer strong{color:var(--ink);}
+
+  @media(max-width:640px){
+    body{font-size:17px;}
+    .hero h1{font-size:2.7rem;}
+    a.card{grid-template-columns:56px 1fr;gap:16px;padding:20px;}
+    .wknum{font-size:2.2rem;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Monash University · Information Technology</span>
+    <h1>FIT1093<br><span class="accent">Cyber Security</span> study sheets</h1>
+    <p class="sub">
+      Colour-coded, analogy-driven revision notes for the cryptography half of the unit — one page per week,
+      built to skim before an exam.
+    </p>
+    <hr class="rule">
+  </header>
+
+  <div class="meta">
+    <div class="legendbox">
+      <span class="mtag">The colour code (used on every page)</span>
+      <div class="legend">
+        <span class="pub"><span class="dot"></span>Blue — public values</span>
+        <span class="sec"><span class="dot"></span>Red — secret / hard problem / attack</span>
+        <span class="esy"><span class="dot"></span>Green — easy / efficient / a goal met</span>
+      </div>
+    </div>
+    <div class="howto">
+      <span class="mtag">How to use these</span>
+      <p>Each sheet has a table of contents up top — jump straight to a topic.</p>
+      <p>Look for the <em>Analogy</em>, <em>Remember</em>, and worked-example boxes; they carry the exam-critical points.</p>
+    </div>
+  </div>
+
+  <div class="cards">
+
+    <a class="card" href="week3.html">
+      <div class="wknum">3</div>
+      <div>
+        <span class="wklabel">Week 3 · Symmetric Key</span>
+        <h2>Integrity &amp; Message Authentication</h2>
+        <p>Detecting tampering with keyed checksums — hash security properties and how MACs are built.</p>
+        <div class="tags"><b>Hash functions</b><b>Preimage &amp; collision</b><b>Birthday attack</b><b>MAC</b><b>CMAC / HMAC</b><b>Authenticated encryption</b></div>
+        <span class="go">Open Week 3 →</span>
+      </div>
+    </a>
+
+    <a class="card" href="week4.html">
+      <div class="wknum">4</div>
+      <div>
+        <span class="wklabel">Week 4 · Public Key</span>
+        <h2>Cryptography: Math Concepts</h2>
+        <p>The number theory that makes public-key crypto possible — easy for honest users, infeasible for attackers.</p>
+        <div class="tags"><b>Primes</b><b>Modular arithmetic</b><b>Modular inverse</b><b>IFP</b><b>DLP</b><b>Finding large primes</b></div>
+        <span class="go">Open Week 4 →</span>
+      </div>
+    </a>
+
+    <a class="card" href="week5.html">
+      <div class="wknum">5</div>
+      <div>
+        <span class="wklabel">Week 5 · Public Key</span>
+        <h2>Cryptography II — Encryption Algorithms</h2>
+        <p>Putting the maths to work: agreeing secrets over public channels, and the two big encryption schemes.</p>
+        <div class="tags"><b>Diffie–Hellman</b><b>ElGamal</b><b>RSA</b><b>MITM</b><b>Certificates</b><b>Hybrid encryption</b></div>
+        <span class="go">Open Week 5 →</span>
+      </div>
+    </a>
+
+  </div>
+
+  <footer>
+    <strong>FIT1093 Cyber Security Tools &amp; Techniques.</strong> Personal revision notes summarising the
+    unit's pre-class slides. Primary reference: Stallings &amp; Brown, <em>Computer Security: Principles and
+    Practice</em>. Not official course material.
+  </footer>
+
+</div>
+</body>
+</html>
