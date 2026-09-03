@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIT1093 Week 2 — Symmetric Key Encryption</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14151d;
+    --ink-soft:#232532;
+    --paper:#f4f5f7;
+    --surface:#ffffff;
+    --text:#1d1e26;
+    --text-dim:#565968;
+    --line:#e2e4ea;
+
+    --key:#c6890b;        /* amber — the KEY */
+    --key-bg:#fbf1d6;
+    --secure:#1f8a5b;     /* green — secure / correct */
+    --secure-bg:#e2f3ea;
+    --attack:#cb3b3b;     /* red — broken / attack */
+    --attack-bg:#fbe6e4;
+    --info:#2f66a8;       /* blue — neutral concept */
+    --info-bg:#e6eef8;
+
+    --radius:14px;
+    --maxw:900px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text);
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:19px;
+    line-height:1.68;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Header ---------- */
+  .masthead{
+    background:var(--ink);
+    color:#f4f5f7;
+    padding:64px 24px 56px;
+  }
+  .masthead-inner{max-width:var(--maxw);margin:0 auto;}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:.8rem;
+    letter-spacing:.04em;
+    color:var(--key);
+    margin:0 0 14px;
+  }
+  .masthead h1{
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:700;
+    font-size:clamp(2.1rem,6vw,3.4rem);
+    line-height:1.05;
+    margin:0 0 18px;
+    letter-spacing:-.015em;
+  }
+  .masthead p{
+    font-size:1.12rem;
+    color:#b9bcca;
+    max-width:60ch;
+    margin:0;
+  }
+  .legend{
+    display:flex;flex-wrap:wrap;gap:10px 22px;
+    margin-top:32px;
+    font-size:.86rem;
+    color:#cfd2dd;
+    font-family:"IBM Plex Mono",monospace;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:8px;}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .dot.k{background:var(--key);}
+  .dot.s{background:var(--secure);}
+  .dot.a{background:var(--attack);}
+  .dot.i{background:var(--info);}
+
+  /* ---------- Layout ---------- */
+  main{max-width:var(--maxw);margin:0 auto;padding:0 24px 96px;}
+
+  /* ---------- Table of contents ---------- */
+  .toc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px 30px;
+    margin:-34px 0 56px;
+    box-shadow:0 10px 30px -18px rgba(20,21,29,.4);
+  }
+  .toc h2{
+    font-family:"Space Grotesk",sans-serif;
+    font-size:1rem;margin:0 0 16px;color:var(--text-dim);
+    font-weight:600;
+  }
+  .toc ol{margin:0;padding:0;list-style:none;
+    display:grid;grid-template-columns:1fr 1fr;gap:6px 30px;}
+  .toc li{counter-increment:toc;}
+  .toc a{
+    color:var(--text);text-decoration:none;font-size:.95rem;
+    display:flex;gap:12px;padding:5px 0;border-bottom:1px solid transparent;
+  }
+  .toc a::before{
+    content:counter(toc,decimal-leading-zero);
+    font-family:"IBM Plex Mono",monospace;color:var(--key);
+    font-size:.82rem;flex:0 0 auto;padding-top:2px;
+  }
+  .toc ol{counter-reset:toc;}
+  .toc a:hover{color:var(--info);}
+  .toc .part-break{grid-column:1/-1;font-family:"IBM Plex Mono",monospace;
+    color:var(--text-dim);font-size:.78rem;margin-top:14px;padding-top:12px;
+    border-top:1px dashed var(--line);}
+
+  /* ---------- Sections ---------- */
+  .part-label{
+    font-family:"IBM Plex Mono",monospace;
+    color:var(--key);font-size:.85rem;
+    margin:70px 0 4px;
+  }
+  .part-title{
+    font-family:"Space Grotesk",sans-serif;
+    font-size:1.9rem;font-weight:700;margin:0 0 8px;letter-spacing:-.01em;
+  }
+  .part-rule{height:3px;background:var(--ink);width:70px;border:0;margin:0 0 10px;}
+
+  section{
+    scroll-margin-top:20px;
+    padding:40px 0 12px;
+    border-top:1px solid var(--line);
+  }
+  section:first-of-type{border-top:0;}
+  .sec-num{
+    font-family:"IBM Plex Mono",monospace;color:var(--key);
+    font-size:.9rem;font-weight:500;
+  }
+  section h3{
+    font-family:"Space Grotesk",sans-serif;
+    font-size:clamp(1.5rem,3.6vw,2rem);
+    font-weight:600;line-height:1.15;margin:6px 0 18px;letter-spacing:-.01em;
+  }
+  section h4{
+    font-family:"Space Grotesk",sans-serif;
+    font-size:1.18rem;font-weight:600;margin:32px 0 8px;
+  }
+  p{margin:0 0 18px;}
+  strong{font-weight:600;}
+  ul{margin:0 0 18px;padding-left:1.3em;}
+  li{margin-bottom:8px;}
+  .lead{font-size:1.08rem;color:var(--text-dim);}
+
+  code,.mono{font-family:"IBM Plex Mono",monospace;font-size:.92em;}
+  .k-term{color:var(--key);font-weight:600;}
+  .s-term{color:var(--secure);font-weight:600;}
+  .a-term{color:var(--attack);font-weight:600;}
+  .i-term{color:var(--info);font-weight:600;}
+
+  /* ---------- Callouts ---------- */
+  .box{
+    border-radius:12px;padding:20px 24px;margin:22px 0;
+    border:1px solid;border-left-width:5px;
+    font-size:.98rem;
+  }
+  .box .box-tag{
+    font-family:"IBM Plex Mono",monospace;font-size:.74rem;
+    letter-spacing:.03em;display:block;margin-bottom:6px;font-weight:600;
+  }
+  .box p:last-child{margin-bottom:0;}
+
+  .analogy{background:var(--info-bg);border-color:var(--info);}
+  .analogy .box-tag{color:var(--info);}
+  .memory{background:var(--key-bg);border-color:var(--key);}
+  .memory .box-tag{color:var(--key);}
+  .warn{background:var(--attack-bg);border-color:var(--attack);}
+  .warn .box-tag{color:var(--attack);}
+  .good{background:var(--secure-bg);border-color:var(--secure);}
+  .good .box-tag{color:var(--secure);}
+
+  /* ---------- Formula block ---------- */
+  .formula{
+    background:var(--ink);color:#f4f5f7;
+    font-family:"IBM Plex Mono",monospace;
+    padding:18px 22px;border-radius:10px;margin:20px 0;
+    font-size:1rem;line-height:1.7;overflow-x:auto;
+  }
+  .formula .cmt{color:#8b8fa3;}
+  .formula .hl{color:var(--key);}
+
+  /* ---------- Comparison table ---------- */
+  .tbl-wrap{overflow-x:auto;margin:22px 0;}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px;}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  thead th{
+    background:var(--ink);color:#f4f5f7;font-family:"Space Grotesk",sans-serif;
+    font-weight:600;font-size:.85rem;
+  }
+  tbody tr:nth-child(even){background:#fafbfc;}
+  td.mono{font-family:"IBM Plex Mono",monospace;}
+
+  /* ---------- Definition pills ---------- */
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;}
+  .pill{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:7px 16px;font-size:.9rem;font-weight:500;
+  }
+
+  /* ---------- Two-col compare cards ---------- */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0;}
+  .ccard{border:1px solid var(--line);border-radius:12px;padding:20px 22px;background:var(--surface);}
+  .ccard h5{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-size:1.05rem;}
+  .ccard ul{margin:0;padding-left:1.2em;font-size:.93rem;}
+  .ccard.is-secure{border-top:4px solid var(--secure);}
+  .ccard.is-attack{border-top:4px solid var(--attack);}
+
+  /* ---------- Footer ---------- */
+  footer{
+    max-width:var(--maxw);margin:0 auto;padding:40px 24px 60px;
+    color:var(--text-dim);font-size:.86rem;border-top:1px solid var(--line);
+  }
+
+  @media (max-width:640px){
+    body{font-size:17px;}
+    .toc ol{grid-template-columns:1fr;}
+    .compare{grid-template-columns:1fr;}
+    .masthead{padding:48px 20px 40px;}
+    main{padding:0 18px 72px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="eyebrow">FIT1093 · Cyber Security Tools &amp; Techniques · Week 2</p>
+    <h1>Symmetric Key Encryption</h1>
+    <p>From the confidentiality problem and classical ciphers through to modern block ciphers (DES, AES) and the modes that turn them into real encryption.</p>
+    <div class="legend">
+      <span><i class="dot k"></i> the key</span>
+      <span><i class="dot s"></i> secure / correct</span>
+      <span><i class="dot a"></i> broken / attack</span>
+      <span><i class="dot i"></i> core concept</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav class="toc" aria-label="Contents">
+    <h2>On this page</h2>
+    <ol>
+      <li class="part-break">Part 1 — Basic Concepts</li>
+      <li><a href="#s1">The confidentiality problem</a></li>
+      <li><a href="#s2">Cryptography: the big picture</a></li>
+      <li><a href="#s3">Terminology &amp; cryptanalysis</a></li>
+      <li><a href="#s4">Classical ciphers: two operations</a></li>
+      <li><a href="#s5">Caesar cipher</a></li>
+      <li><a href="#s6">Monoalphabetic substitution</a></li>
+      <li><a href="#s7">Transposition ciphers</a></li>
+      <li><a href="#s8">Kerckhoffs' principle</a></li>
+      <li><a href="#s9">Confusion, diffusion &amp; avalanche</a></li>
+      <li><a href="#s10">Unconditional vs computational security</a></li>
+      <li><a href="#s11">The One-Time Pad</a></li>
+      <li class="part-break">Part 2 — Modern Encryption Algorithms</li>
+      <li><a href="#s12">Modern vs classical ciphers</a></li>
+      <li><a href="#s13">The block cipher</a></li>
+      <li><a href="#s14">Block cipher requirements</a></li>
+      <li><a href="#s15">The XOR operation</a></li>
+      <li><a href="#s16">Block cipher design</a></li>
+      <li><a href="#s17">DES &amp; the Feistel structure</a></li>
+      <li><a href="#s18">Parameters &amp; brute force</a></li>
+      <li><a href="#s19">AES</a></li>
+      <li><a href="#s20">Modes: ECB, CBC, CTR</a></li>
+    </ol>
+  </nav>
+
+  <!-- ================= PART 1 ================= -->
+  <p class="part-label">PART 1</p>
+  <h2 class="part-title">Basic Concepts</h2>
+  <hr class="part-rule">
+
+  <section id="s1">
+    <span class="sec-num">01</span>
+    <h3>The confidentiality problem</h3>
+    <p class="lead">Goal: keep secret data <strong>CONFidential</strong> — only <em>some</em> people can access it, not all.</p>
+    <p>The starting assumption is uncomfortable but honest: <strong>the channel is insecure</strong>. Anything you send can be intercepted (eavesdropping), and you have no control over the channel itself.</p>
+
+    <div class="box analogy">
+      <span class="box-tag">SECURITY PRINCIPLE</span>
+      <p>State what you <em>can't</em> fix, then aim for the next best thing. You can't stop interception — so instead make sure that intercepted data <strong>reveals nothing</strong>. The means can change as long as the goal is met: rather than "physically secure the channel," you "secure the information inside it."</p>
+    </div>
+
+    <p>The strategy: <span class="s-term">scramble</span> the info before sending it (encrypt), so that only the receiver can <span class="s-term">unscramble</span> it (decrypt), using a secret <span class="k-term">key</span>. Even if it's intercepted, it's gibberish to the attacker.</p>
+  </section>
+
+  <section id="s2">
+    <span class="sec-num">02</span>
+    <h3>Cryptography: the big picture</h3>
+    <p>Cryptography is the set of techniques that <strong>transform</strong> a message so the output achieves a security goal. The three big goals and how symmetric vs public-key crypto delivers them:</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Goal</th><th>What it means</th><th>Achieved by</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>CONF</strong>identiality</td><td>Nobody unauthorised can read it</td><td>Encryption (symmetric <em>or</em> public key)</td></tr>
+          <tr><td><strong>INT</strong>egrity</td><td>It wasn't tampered with</td><td>MAC (symmetric) · Digital signatures (public key)</td></tr>
+          <tr><td><strong>AUTH</strong>entication</td><td>It really came from who it claims</td><td>Digital signatures (public key)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — "CIA"</span>
+      <p>The three goals are the classic <strong>C-I-A</strong> triad: <strong>C</strong>onfidentiality, <strong>I</strong>ntegrity, <strong>A</strong>uthentication. This week only covers the first one (CONF via <em>symmetric</em> encryption). "Symmetric = same key both ends" — <em>sym</em> means same.</p>
+    </div>
+
+    <p><span class="i-term">Terminology:</span> the words come from Greek — <em>kryptos</em> (hidden) + <em>graphein</em> (writing). Originally it just meant message secrecy; today it covers many security goals.</p>
+  </section>
+
+  <section id="s3">
+    <span class="sec-num">03</span>
+    <h3>Terminology &amp; cryptanalysis</h3>
+    <p>The building-block vocabulary you'll see on every diagram:</p>
+    <div class="formula">
+plaintext p  <span class="hl">──Encryption──▶</span>  ciphertext c
+message  m   <span class="hl">──MAC───────▶</span>  tag τ
+message  m   <span class="hl">──Signature──▶</span>  signature s
+    </div>
+
+    <div class="compare">
+      <div class="ccard is-secure">
+        <h5>Cryptography</h5>
+        <ul>
+          <li>Done by the <strong>cryptographer</strong></li>
+          <li>How to <em>design</em> a scheme to achieve security</li>
+        </ul>
+      </div>
+      <div class="ccard is-attack">
+        <h5>Cryptanalysis</h5>
+        <ul>
+          <li>Done by the <strong>cryptanalyst</strong></li>
+          <li>How to <em>break / analyse</em> security</li>
+          <li>Ironically, this is what gives others confidence your design is actually strong</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p>Cryptogra<strong>phy</strong> = building (like <em>photo</em>graphy captures). Cryptanal<strong>ysis</strong> = taking apart (like <em>analysis</em> breaks down). Attacker's job = analysis.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <span class="sec-num">04</span>
+    <h3>Classical ciphers: two basic operations</h3>
+    <p>Classical ciphers (Caesar's era, the WWII Enigma machine) process plaintext <strong>character by character</strong>. Everything they do is built from just two moves:</p>
+
+    <div class="compare">
+      <div class="ccard">
+        <h5>① Substitution</h5>
+        <ul>
+          <li>Systematically <strong>replace</strong> letters with other letters — like a table lookup.</li>
+          <li>Changes the <em>value</em> of each letter.</li>
+          <li>e.g. shift each letter 2 forward: "message" → "oguucig"</li>
+        </ul>
+      </div>
+      <div class="ccard">
+        <h5>② Transposition</h5>
+        <ul>
+          <li><strong>Rearrange</strong> the positions of letters by a rule.</li>
+          <li>Does <em>not</em> depend on the value of any letter.</li>
+          <li>e.g. move each letter 1 position: "message" → "emessag"</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p><strong>Substitution changes WHAT the letters are. Transposition changes WHERE they are.</strong> Substitution = new identity; transposition = new address. Keep these two straight and everything else in this course clicks — modern ciphers are just these two, repeated many times.</p>
+    </div>
+  </section>
+
+  <section id="s5">
+    <span class="sec-num">05</span>
+    <h3>Caesar cipher</h3>
+    <p>A <span class="i-term">substitution</span> cipher named after Julius Caesar. Each letter is replaced by the letter a <strong>fixed number of positions</strong> further along the alphabet. That number of positions <em>is the</em> <span class="k-term">key, K</span>.</p>
+
+    <p>It works as modular arithmetic, treating A=0, B=1, … Z=25:</p>
+    <div class="formula">
+Encrypt:  E<span class="cmt">ₖ</span>(x) = (x + K) mod 26
+Decrypt:  D<span class="cmt">ₖ</span>(x) = (x − K) mod 26
+
+<span class="cmt"># "mod 26" wraps around like a clock:</span>
+<span class="cmt"># 'z' is 25, with K=3 → 25+3 = 28 mod 26 = 2 → 'c'</span>
+    </div>
+
+    <p>Worked example with <span class="k-term">K = 3</span>:</p>
+    <div class="formula">
+plaintext:   ABCDEF...PQRSTUVWXYZ
+ciphertext:  DEFGHI...STUVWXYZABC
+
+  <span class="hl">TREATY IMPOSSIBLE</span>  →  WUHDWB LPSRVVLEOH
+    </div>
+
+    <div class="box warn">
+      <span class="box-tag">ATTACK — trivially broken</span>
+      <p>Attack by <strong>brute-force exhaustive key search</strong>: there are only <strong>26 possible keys</strong> (25 useful shifts). Try them all — only one decryption produces sensible English. e.g. ciphertext "BMJDF" with shift 25 → "ALICE". A human or computer cracks this in seconds.</p>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p>Caesar's weakness = <strong>tiny keyspace</strong>. This is the first appearance of a theme: security depends on how many keys an attacker must try. 26 is nowhere near enough.</p>
+    </div>
+  </section>
+
+  <section id="s6">
+    <span class="sec-num">06</span>
+    <h3>Monoalphabetic substitution cipher</h3>
+    <p>Fix the tiny keyspace by using a full <strong>mapping table</strong>: every letter maps to an arbitrary replacement (A→D, B→A, C→I, …). Now the key is the <em>whole table</em>, giving 26! ≈ 4×10²⁶ possible keys — far too many to brute force. Different people can use different tables.</p>
+
+    <div class="box warn">
+      <span class="box-tag">ATTACK — frequency analysis</span>
+      <p>Huge keyspace, but still <strong>broken</strong> by a smarter attack. The fatal flaw: each plaintext letter <em>always</em> maps to the same ciphertext letter, so <strong>letter frequencies survive encryption unchanged</strong>. In English, 'e' is by far the most common letter, then 't', 'a', 'o'… The attacker matches the most common ciphertext letter to 'e', spots short repeated words (like "the"), and unravels the rest. The message doesn't even have to be long.</p>
+    </div>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — "ETAOIN"</span>
+      <p>The English frequency order starts <strong>E T A O I N</strong> (sometimes "ETAOIN SHRDLU"). A big keyspace is <em>not</em> enough on its own — a cipher must also <strong>hide statistical patterns</strong>. Chaining two monoalphabetic ciphers (K1 then K2) doesn't help: the result is <em>still</em> just one monoalphabetic mapping with the same weakness.</p>
+    </div>
+  </section>
+
+  <section id="s7">
+    <span class="sec-num">07</span>
+    <h3>Transposition ciphers</h3>
+    <p>The other classical family: keep the letters, scramble their <strong>positions</strong>.</p>
+
+    <h4>Rail fence cipher</h4>
+    <p>Write letters diagonally across a number of "rails" (rows), then read off row by row. The key is the <strong>depth</strong> (number of rails). "WE ARE DISCOVERED FLEE AT ONCE" on 3 rails becomes <code>wecrlte erdsoeefeaoc aivden</code>.</p>
+
+    <h4>General transposition</h4>
+    <p>Pick a block size L and a permutation of the positions as the key, e.g. K = (5,3,1,4,6,8,2,0,9,7). Reorder every block of L letters by K:</p>
+    <div class="formula">
+positions:  0123456789
+Message  =  <span class="hl">HELLOTHERE</span>  HOWARETHEY
+Cipher   =  TLEOHRLHEE  EAORTEEWHY
+    </div>
+
+    <div class="box warn">
+      <span class="box-tag">ATTACK — still leaks</span>
+      <p>Transposition only moves letters, so the <strong>letter frequencies are unchanged</strong> — the same statistical weakness. Not secure on its own.</p>
+    </div>
+  </section>
+
+  <section id="s8">
+    <span class="sec-num">08</span>
+    <h3>Kerckhoffs' principle</h3>
+    <p>How do you restrict who can decrypt? Two options:</p>
+
+    <div class="compare">
+      <div class="ccard is-attack">
+        <h5>Security by obscurity</h5>
+        <ul>
+          <li>Keep the <strong>algorithm</strong> secret.</li>
+          <li>Fragile — algorithms leak, get reverse-engineered, and can't be changed easily once exposed.</li>
+        </ul>
+      </div>
+      <div class="ccard is-secure">
+        <h5>Kerckhoffs' principle</h5>
+        <ul>
+          <li>Assume the <strong>algorithm is public</strong>; keep only the <span class="k-term">key</span> secret.</li>
+          <li>A key is short, easy to change, and easy to replace if compromised.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box analogy">
+      <span class="box-tag">ANALOGY + HISTORY HINT</span>
+      <p>Think of a door lock: the <em>design</em> of the lock mechanism is well-known to every locksmith, but your <strong>key</strong> is what keeps intruders out. The lecture's "hint from history" is the Enigma machine — its design was eventually known, yet security rested on the secret daily key settings (which Alan Turing &amp; Bletchley Park famously broke). <strong>Keeping an algorithm secret is far harder than keeping a key secret.</strong></p>
+    </div>
+  </section>
+
+  <section id="s9">
+    <span class="sec-num">09</span>
+    <h3>Confusion, diffusion &amp; the avalanche effect</h3>
+    <p>Modern ciphers are <strong>product ciphers</strong> — they combine substitution <em>and</em> transposition. The combination is genuinely stronger than either alone: the number of possible keys tends to multiply. Two design properties make a cipher strong:</p>
+
+    <div class="compare">
+      <div class="ccard">
+        <h5>Confusion</h5>
+        <ul>
+          <li>Make the relationship between <strong>ciphertext C and key K</strong> as complex as possible.</li>
+          <li>Achieved by complex <strong>substitution</strong>.</li>
+          <li>Goal: hard to recover K by observing C.</li>
+        </ul>
+      </div>
+      <div class="ccard">
+        <h5>Diffusion</h5>
+        <ul>
+          <li><strong>Spread</strong> each plaintext bit's influence over many ciphertext bits.</li>
+          <li>Achieved by complex <strong>transposition/permutation</strong>.</li>
+          <li>Goal: plaintext patterns vanish from C.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — pair them up</span>
+      <p><strong>Confusion ↔ Substitution ↔ hides the KEY.</strong> &nbsp; <strong>Diffusion ↔ Transposition ↔ hides the PLAINTEXT pattern.</strong> Two C-words, two D-words — link them and you'll never mix them up in the exam.</p>
+    </div>
+
+    <h4>Avalanche effect</h4>
+    <p>Diffusion taken to its ideal: flipping <strong>one bit</strong> of the plaintext <em>or</em> the key should flip <strong>about half</strong> the ciphertext bits — a tiny input change triggers a huge, unpredictable output change.</p>
+    <div class="formula">
+P=11000000, K = 011<span class="hl">0</span>1101  →  C = 10101011
+P=11000000, K = 011<span class="hl">1</span>1101  →  C = 11011101
+<span class="cmt">              one key bit flipped → many ciphertext bits change</span>
+    </div>
+    <div class="box analogy">
+      <span class="box-tag">ANALOGY</span>
+      <p>Like an avalanche: one small pebble (a single bit) sets off a landslide that changes the whole slope (the whole ciphertext).</p>
+    </div>
+  </section>
+
+  <section id="s10">
+    <span class="sec-num">10</span>
+    <h3>Unconditional vs computational security</h3>
+    <div class="compare">
+      <div class="ccard">
+        <h5>Unconditional (information-theoretic)</h5>
+        <ul>
+          <li>Secure even against an attacker with <strong>infinite</strong> computing power.</li>
+          <li>Ciphertext reveals <em>nothing</em> about plaintext, ever.</li>
+        </ul>
+      </div>
+      <div class="ccard">
+        <h5>Computational</h5>
+        <ul>
+          <li>Secure against an attacker with <strong>limited</strong> (realistic) computing power.</li>
+          <li>Practical bar: time to break &gt; useful life of the info, and cost to break &gt; value of the info.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p><strong>Unconditional = unbreakable in theory.</strong> <strong>Computational = not worth breaking in practice.</strong> Real-world ciphers (DES, AES) aim for computational security — the One-Time Pad is the rare unconditional one.</p>
+    </div>
+  </section>
+
+  <section id="s11">
+    <span class="sec-num">11</span>
+    <h3>The One-Time Pad</h3>
+    <p>Is unconditionally secure encryption actually possible? <span class="s-term">Yes</span> — the One-Time Pad. Take the Caesar idea but use an <strong>independent random shift for every single letter</strong>:</p>
+    <div class="formula">
+K = (2, 9, 13, 20, 4)   <span class="cmt"># a fresh random shift per letter</span>
+M =  H  E   L   L  O
+C =  J  N   Y   F  P
+    </div>
+
+    <div class="box good">
+      <span class="box-tag">WHY IT'S UNBREAKABLE</span>
+      <p>Brute force fails because <strong>every possible decryption is equally likely</strong>. For a 5-letter ciphertext, <em>some</em> key turns it into "HELLO", another key turns the <em>same</em> ciphertext into "WORLD", another into "MONEY" — all valid English, all equally plausible. The attacker has no way to know which is correct, even with unlimited time.</p>
+    </div>
+
+    <div class="box warn">
+      <span class="box-tag">TWO CATCHES</span>
+      <p><strong>1. The key is as long as the message.</strong> That makes key exchange impractical for large messages — you'd have to securely share as much key material as data. (Still used for ultra-high-security links, e.g. the historic White House–Kremlin hotline, with key tapes hand-delivered by embassy.)</p>
+      <p><strong>2. Never reuse the key.</strong> If Alice reuses key K for two messages, an attacker who learns one plaintext ("HELLO") recovers K = C₁ − P₁, then decrypts the second message ("PAYME") instantly. The whole guarantee collapses on reuse — hence <em>one-time</em> pad.</p>
+    </div>
+  </section>
+
+  <!-- ================= PART 2 ================= -->
+  <p class="part-label">PART 2</p>
+  <h2 class="part-title">Modern Encryption Algorithms</h2>
+  <hr class="part-rule">
+
+  <section id="s12">
+    <span class="sec-num">12</span>
+    <h3>Modern vs classical ciphers</h3>
+    <p>The one big shift in mindset:</p>
+    <div class="pills">
+      <span class="pill">Classical → process plaintext in <strong>characters</strong></span>
+      <span class="pill">Modern → process plaintext in <strong>blocks</strong> (e.g. 128 bits)</span>
+    </div>
+    <p>The modern recipe for encryption design has two clean layers:</p>
+    <ul>
+      <li>Design a <strong>block cipher</strong> — encrypts exactly one block (e.g. 128 bits) at a time.</li>
+      <li>Wrap it in a <strong>mode of operation</strong> — lets you encrypt arbitrary-length messages.</li>
+    </ul>
+    <p class="lead">(Stream ciphers — bit-by-bit encryption — are the other approach, not studied here.)</p>
+  </section>
+
+  <section id="s13">
+    <span class="sec-num">13</span>
+    <h3>The block cipher</h3>
+    <p>A block cipher is a single function <code>E</code>:</p>
+    <div class="formula">
+Inputs:   plaintext block P  (n bits)
+          secret key      K  (k bits)
+Output:   ciphertext block C  (n bits)
+
+          <span class="hl">C = E(K, P)</span>
+    </div>
+    <p>Internally, <code>E</code> applies efficient <strong>substitution &amp; permutation</strong> (transposition) operations — the confusion/diffusion machinery from Part 1, now on bits instead of letters.</p>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p>Note P and C are the <strong>same length</strong> (n bits in, n bits out). The key length k is separate. A block cipher is a giant, key-controlled lookup that maps every n-bit input to an n-bit output.</p>
+    </div>
+  </section>
+
+  <section id="s14">
+    <span class="sec-num">14</span>
+    <h3>Block cipher requirements</h3>
+
+    <h4>① Decryption correctness</h4>
+    <p>There must be a decryption algorithm <code>D</code> that perfectly undoes <code>E</code> with the same key:</p>
+    <div class="formula">
+for any (P, K):  if  C = E(K, P)  then  D(K, C) = P
+    </div>
+
+    <h4>② Pseudorandom Function (PRF) security</h4>
+    <p>If the key K is chosen randomly, the ciphertext must look <strong>indistinguishable from random bits</strong> of the same length. It should be computationally infeasible for an attacker to tell an <code>E</code> output apart from a truly random string <code>Z</code> — <em>even if</em> they know the corresponding plaintexts (a <span class="a-term">known-plaintext attack</span>). They can't tell C from Z — as long as they don't know K.</p>
+
+    <div class="good box">
+      <span class="box-tag">PRF SECURITY — what it really means</span>
+      <p>The cipher must genuinely "mix P up." If outputs look random even to someone who knows the inputs, the cipher has real confusion &amp; diffusion. This is the modern, precise version of "the ciphertext leaks nothing."</p>
+    </div>
+    <p><strong>Worked intuition:</strong> a cipher E<sub>A</sub> whose ciphertext keeps the same last 4 bits as the plaintext (or otherwise mirrors input structure) is <span class="a-term">not</span> PRF-secure; a cipher E<sub>B</sub> whose every output bit looks scrambled and unrelated <em>is</em> a good candidate.</p>
+  </section>
+
+  <section id="s15">
+    <span class="sec-num">15</span>
+    <h3>The XOR operation (⊕)</h3>
+    <p>The workhorse bit operation of modern crypto. XOR of two bits is 1 when they <strong>differ</strong>, 0 when they're the <strong>same</strong>:</p>
+    <div class="formula">
+0 ⊕ 0 = 0        <span class="cmt">same  → 0</span>
+0 ⊕ 1 = 1        <span class="cmt">differ→ 1</span>
+1 ⊕ 0 = 1        <span class="cmt">differ→ 1</span>
+1 ⊕ 1 = 0        <span class="cmt">same  → 0</span>
+
+<span class="cmt"># XOR whole strings bit-by-bit:</span>
+(0,1,1) ⊕ (1,1,0) = (1,0,1)
+    </div>
+
+    <div class="box good">
+      <span class="box-tag">THE KEY PROPERTY — reversibility</span>
+      <p>XORing by the same value twice cancels out: <strong>(P ⊕ K) ⊕ K = P</strong>. So the <em>same</em> operation both encrypts and decrypts:</p>
+      <p class="mono">Encrypt: C = P ⊕ K = 1110 ⊕ 0101 = 1011<br>
+      Decrypt: P = C ⊕ K = 1011 ⊕ 0101 = 1110</p>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID</span>
+      <p>XOR <em>is</em> the One-Time Pad for bits — it's "mod 2 addition" (the bit version of the OTP's "mod 26"). It's reversible, cheap, and shows up everywhere: inside DES's Feistel rounds, in AES's AddRoundKey, and in every mode of operation.</p>
+    </div>
+  </section>
+
+  <section id="s16">
+    <span class="sec-num">16</span>
+    <h3>Block cipher design: repeat, repeat, repeat</h3>
+    <p>A single round of substitution + permutation isn't strong enough. So block ciphers apply a <strong>repeated combination</strong> of:</p>
+    <ul>
+      <li><span class="i-term">Confusion via Substitution</span> — S-boxes substitute bit groups.</li>
+      <li><span class="i-term">Diffusion via Permutation</span> — wiring spreads bits across the block.</li>
+    </ul>
+    <p><strong>Why repeat?</strong> Each round only mixes locally. Repeating rounds compounds confusion and diffusion until a single input bit influences the entire block — achieving the avalanche effect. More rounds ⇒ more mixing ⇒ more security.</p>
+    <div class="box analogy">
+      <span class="box-tag">ANALOGY</span>
+      <p>Like kneading dough or shuffling a deck: one fold or one shuffle barely mixes things, but repeat it enough times and the original arrangement is completely gone and unrecoverable.</p>
+    </div>
+  </section>
+
+  <section id="s17">
+    <span class="sec-num">17</span>
+    <h3>DES &amp; the Feistel structure</h3>
+    <p><strong>DES</strong> (Data Encryption Standard, US 1977): block |P|=|C| = 64 bits, key |K| = 56 bits. Built on the <strong>Feistel structure</strong> (Horst Feistel, IBM). It used to be <em>the</em> standard, but is now <span class="a-term">obsolete and totally insecure</span> — withdrawn in 2005 — because its 56-bit key is far too small.</p>
+    <p><strong>Triple-DES (3DES, 1995):</strong> run DES three times for a stronger key; still used as a standard.</p>
+
+    <h4>How one Feistel round works</h4>
+    <p>Split the block into left (L) and right (R) halves. Each round <code>i</code>:</p>
+    <div class="formula">
+Lᵢ = Rᵢ₋₁
+Rᵢ = Lᵢ₋₁ ⊕ F(Rᵢ₋₁, Kᵢ)
+<span class="cmt">  F  = round function      Kᵢ = round sub-key</span>
+    </div>
+
+    <h4>Why Feistel decryption is elegant</h4>
+    <p>Thanks to XOR reversibility, you can run the <em>same</em> structure backwards. Given (L₁, R₁) and K₁:</p>
+    <div class="formula">
+R₀ = L₁                        <span class="cmt"># the swap undoes itself</span>
+L₀ = R₁ ⊕ F(R₀, K₁)            <span class="cmt"># because R₁ = L₀ ⊕ F(R₀,K₁)</span>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — the big win</span>
+      <p>The beauty of Feistel: <strong>the round function F never needs to be invertible</strong>, because decryption relies on XOR cancelling out, not on reversing F. That's why encryption and decryption use almost identical hardware — you just reverse the order of the sub-keys.</p>
+    </div>
+  </section>
+
+  <section id="s18">
+    <span class="sec-num">18</span>
+    <h3>Parameters &amp; brute force</h3>
+    <p>Three cipher parameters, each raising security:</p>
+    <div class="pills">
+      <span class="pill">↑ Block size |P|=|C| ⇒ ↑ security</span>
+      <span class="pill">↑ Key size |K| ⇒ ↑ security</span>
+      <span class="pill">↑ Rounds r ⇒ ↑ confusion/diffusion ⇒ ↑ security</span>
+    </div>
+
+    <p><strong>Cryptanalysis</strong> = the study of attacks. Two levels:</p>
+    <ul>
+      <li><span class="a-term">Brute force</span> — always possible: try keys until one works. On average you try <strong>half</strong> the keyspace; for a k-bit key that's 2ᵏ keys total.</li>
+      <li><span class="a-term">Shortcut attacks</span> — the real goal of cryptanalysis: exploit cipher structure or plaintext patterns to break it <em>faster</em> than brute force. For a <strong>well-designed modern cipher, no shortcut attack is known</strong> — so brute force is the fastest attack, and a big enough key makes that hopeless.</li>
+    </ul>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — why key size is everything</span>
+      <p>Each extra key bit <strong>doubles</strong> the brute-force effort. A rough sense of the scale (at 10⁶ decryptions/µs):</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Key size</th><th>Number of keys</th><th>Brute-force time</th></tr></thead>
+        <tbody>
+          <tr><td>32 bits</td><td class="mono">4.3 × 10⁹</td><td>~2 milliseconds</td></tr>
+          <tr><td>56 bits (DES)</td><td class="mono">7.2 × 10¹⁶</td><td>~10 hours &nbsp;<span class="a-term">← too weak</span></td></tr>
+          <tr><td>128 bits (AES)</td><td class="mono">3.4 × 10³⁸</td><td>~5.4 × 10¹⁸ years</td></tr>
+          <tr><td>168 bits (3DES)</td><td class="mono">3.7 × 10⁵⁰</td><td>~5.9 × 10³⁰ years</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="s19">
+    <span class="sec-num">19</span>
+    <h3>AES — the modern standard</h3>
+    <p>In 1997 NIST called for a replacement for DES. The winner, designed by <strong>Joan Daemen &amp; Vincent Rijmen</strong> (Belgium) — a.k.a. the <strong>Rijndael</strong> algorithm — was selected in 2000 and standardised in 2001.</p>
+    <div class="pills">
+      <span class="pill">Block: |P|=|C| = <strong>128 bits</strong></span>
+      <span class="pill">Key: <strong>128 / 192 / 256 bits</strong></span>
+      <span class="pill">Rounds: <strong>10 / 12 / 14</strong></span>
+    </div>
+    <p>The block is treated as a 4×4 array of bytes ("the state"). Each round applies four transformations:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Step</th><th>What it does</th><th>Provides</th></tr></thead>
+        <tbody>
+          <tr><td><strong>SubBytes</strong></td><td>Replace each byte via a 256-entry lookup table (S-box)</td><td>Confusion</td></tr>
+          <tr><td><strong>ShiftRows</strong></td><td>Cyclically shift each row of the state by a set amount</td><td>Diffusion</td></tr>
+          <tr><td><strong>MixColumns</strong></td><td>Matrix multiplication over the finite field GF(2⁸)</td><td>Diffusion</td></tr>
+          <tr><td><strong>AddRoundKey</strong></td><td>XOR the state with the round key</td><td>Key mixing</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — "Some Students Mix AddRoundKey"</span>
+      <p>Round order: <strong>S</strong>ubBytes → <strong>S</strong>hiftRows → <strong>M</strong>ixColumns → <strong>A</strong>ddRoundKey. Notice AES is efficient on an 8-bit CPU: it's just table lookups, byte shifts, field maths, and XORs. Also note it's <em>not</em> Feistel — it transforms the whole block each round.</p>
+    </div>
+    <div class="box warn">
+      <span class="box-tag">WARNING — don't roll your own</span>
+      <p>Never implement AES or DES yourself. Straightforward implementations leak through <strong>side-channel attacks</strong> (e.g. timing attacks). Always use a well-known crypto library written by experts.</p>
+    </div>
+  </section>
+
+  <section id="s20">
+    <span class="sec-num">20</span>
+    <h3>Block cipher modes: ECB, CBC, CTR</h3>
+    <p>A block cipher only handles <em>one</em> block. For longer messages you break them into blocks (and <strong>pad</strong> the last one to a full block — unambiguous padding like <code>10000…0</code>). A <strong>mode of operation</strong> defines how the blocks chain together. NIST SP 800-38A defines five; you study three.</p>
+
+    <h4>ECB — Electronic Code Book <span class="a-term">(insecure)</span></h4>
+    <p>Each block is encrypted <strong>independently</strong> with the same key — like a codebook lookup.</p>
+    <div class="formula">Cᵢ = E(Pᵢ, K)   <span class="cmt"># every block encrypted on its own</span></div>
+    <div class="box warn">
+      <span class="box-tag">WHY ECB IS BROKEN — the penguin problem</span>
+      <p>Identical plaintext blocks produce <strong>identical ciphertext blocks</strong>. So <strong>patterns in the plaintext survive into the ciphertext</strong> — famously, encrypting an image of the Linux penguin in ECB still shows the penguin. Encryption should look like random noise; ECB doesn't. It enables code-book analysis and must be <strong>avoided</strong>. (Real-world fail: early Zoom used ECB.)</p>
+    </div>
+
+    <h4>CBC — Cipher Block Chaining <span class="s-term">(secure)</span></h4>
+    <p>Chain each block with the previous ciphertext block before encrypting. Start with a random <strong>Initialization Vector (IV)</strong>.</p>
+    <div class="formula">
+C₀ = IV                              <span class="cmt"># random start value</span>
+Cᵢ = E(Pᵢ ⊕ Cᵢ₋₁, K)                 <span class="cmt"># depends on previous block</span>
+    </div>
+    <div class="compare">
+      <div class="ccard is-secure">
+        <h5>CBC strengths</h5>
+        <ul>
+          <li>Identical plaintext blocks now give different ciphertext — patterns destroyed.</li>
+          <li>Secure <em>if</em> the IV is random &amp; independent per message and the cipher is a good PRF.</li>
+          <li>Common use: bulk data, e.g. hard-disk encryption.</li>
+        </ul>
+      </div>
+      <div class="ccard is-attack">
+        <h5>CBC costs</h5>
+        <ul>
+          <li>Each block depends on all previous ones → encryption <strong>can't be parallelised</strong>.</li>
+          <li>A change to one block affects all later ciphertext blocks.</li>
+          <li>Error propagation: a corrupted received block garbles <strong>two</strong> decrypted blocks.</li>
+          <li>IV must be known to both sides &amp; freshly random each time.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4>CTR — Counter <span class="s-term">(secure)</span></h4>
+    <p>Turn the block cipher into a stream: encrypt a counter and XOR the result with the plaintext.</p>
+    <div class="formula">
+ctr₁ = IV
+Kᵢ = E(ctrᵢ, K)          <span class="cmt"># encrypt the counter → keystream</span>
+Cᵢ = Pᵢ ⊕ Kᵢ             <span class="cmt"># XOR keystream with plaintext</span>
+ctrᵢ₊₁ = ctrᵢ + 1        <span class="cmt"># increment for next block</span>
+    </div>
+    <div class="compare">
+      <div class="ccard is-secure">
+        <h5>CTR strengths</h5>
+        <ul>
+          <li><strong>Parallelisable</strong> in hardware or software; keystream can be pre-computed in advance.</li>
+          <li><strong>No error propagation</strong> — a bad block doesn't affect later ones.</li>
+          <li>Random access to any block independently. Great for bursty, high-speed links (IPSec, network security).</li>
+        </ul>
+      </div>
+      <div class="ccard is-attack">
+        <h5>CTR rule</h5>
+        <ul>
+          <li>Every block needs a <strong>unique</strong> counter value that is <strong>never reused</strong> with the same key.</li>
+          <li>Secure if the IV/nonce is random or never repeats, and the cipher is a good PRF.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box memory">
+      <span class="box-tag">MEMORY AID — one line each</span>
+      <p><strong>ECB</strong> = "Every Copy's the Bane" → repeats leak, never use it.<br>
+      <strong>CBC</strong> = "Chained, so serial" → secure but can't parallelise, needs random IV.<br>
+      <strong>CTR</strong> = "CounTeR, so parallel" → fast, random-access, never reuse the counter.<br>
+      Common thread across all secure modes: a <strong>random/fresh IV or nonce</strong> + a <strong>PRF-secure block cipher</strong>.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Study summary for FIT1093 Cyber Security Tools &amp; Techniques — Week 2, Symmetric Key Encryption (Parts 1 &amp; 2).
+  Further reading: <em>Computer Security: Principles and Practice</em> (Stallings &amp; Brown), Ch. 2.1 &amp; Ch. 20.
+</footer>
+
+</body>
+</html>
